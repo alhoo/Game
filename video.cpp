@@ -75,9 +75,8 @@ void draw(vector<GLuint> texture)
     glLoadIdentity();                           // Reset The Current Modelview Matrix
 }
 
-vector<GLuint> loadTexture(){
+vector<GLuint> loadTexture(int w, int h){
   vector<GLuint> ret;
-  int w = 512, h=512;
   unsigned char * pixels = new unsigned char[w * h * 3];
 
   for (unsigned int i = 0; i < w * h; i+=3) {

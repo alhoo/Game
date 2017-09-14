@@ -15,7 +15,7 @@
 using namespace std;
 
 int width = 1024, height=768;
-unsigned char * pixels = new unsigned char[512*512 * 3];
+unsigned char * pixels = new unsigned char[256*256 * 3];
 
 class World {
   public:
@@ -34,12 +34,12 @@ class World {
     void draw(void (*fn)(unsigned char *, int, int),
               unsigned short width, unsigned short height){
 //      auto k = (((int)(this->state[0]))%3000 + 1000);
-      int W = 2;
+      int W = 1;
       for (auto i = 0; i < 3 * width * height; i++) {
         pixels[i] = 0x00;
       }
-      auto px = 400*sin(this->state[0]*0.1);
-      auto py = 400*cos(this->state[0]*0.1);
+      auto px = 300*sin(this->state[0]*0.1);
+      auto py = 300*cos(this->state[0]*0.1);
       auto cp = 3*((int)(3*width * height/2 + 3*width/2)/3);
       for (auto i = 0; i < 100; i++) {
         int x = 3*((int)((20*sin(i*0.063) + px)/3));
@@ -96,12 +96,12 @@ int main(){
 
     GLFWwindow* window = init(width, height);
     if(window == NULL) return 1;
-    vector<GLuint> texture = loadTexture();
+    vector<GLuint> texture = loadTexture(256, 256);
     World w;
     unsigned long frame = 0;
     do{
         w.update();
-        w.draw(updatePixels, 512, 512);
+        w.draw(updatePixels, 256, 256);
         draw(texture);
         // Swap buffers
         glfwSwapBuffers(window);
