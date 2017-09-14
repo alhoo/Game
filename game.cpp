@@ -15,7 +15,7 @@
 using namespace std;
 
 int width = 1024, height=768;
-unsigned char * pixels = new unsigned char[width * height * 3];
+unsigned char * pixels = new unsigned char[512*512 * 3];
 
 class World {
   public:
@@ -32,9 +32,10 @@ class World {
     }
 
     void draw(void (*fn)(unsigned char *, int, int),
-              unsigned short width, unsigned short heigth){
+              unsigned short width, unsigned short height){
 //      auto k = (((int)(this->state[0]))%3000 + 1000);
-      for (auto i = 0; i < 3 * width * heigth; i++) {
+      int W = 2;
+      for (auto i = 0; i < 3 * width * height; i++) {
         pixels[i] = 0x00;
       }
       auto px = 400*sin(this->state[0]*0.1);
@@ -49,31 +50,35 @@ class World {
       }
       //Borders
       if(SHOW_BORDERS){
-        for (auto i = 0; i < width; i++) {
-          pixels[3*i] = 0xFF;
-          pixels[3*i + 1] = 0xFF;
-          pixels[3*i + (3 * width)*(height - 1)] = 0xFF;
-          pixels[3*i + (3 * width)*(height - 1) + 1] = 0xFF;
-        }
-        for (auto i = 0; i < height; i++) {
-          pixels[i*(3*width)] = 0xFF;
-          pixels[i*(3*width)+2] = 0xFF;
-          pixels[i*(3*width) + 3*(width - 1)] = 0xFF;
-          pixels[i*(3*width) + 3*(width - 1)+2] = 0xFF;
+        for (auto k = 0; k < 2*W; k++){
+          for (auto i = 0; i < width; i++) {
+            pixels[3*i + k*(3 * width)] = 0xFF;
+            pixels[3*i + k*(3 * width) + 1] = 0xFF;
+            pixels[3*i + (3 * width)*(height - 1 - k)] = 0xFF;
+            pixels[3*i + (3 * width)*(height - 1 - k) + 1] = 0xFF;
+          }
+          for (auto i = 0; i < height; i++) {
+            pixels[i*(3*width) + 3*k] = 0xFF;
+            pixels[i*(3*width) + 3*k + 2] = 0xFF;
+            pixels[i*(3*width) + 3*(width - 1 - k)] = 0xFF;
+            pixels[i*(3*width) + 3*(width - 1 - k)+2] = 0xFF;
+          }
         }
       }
       //Center cross
       if(SHOW_CENTER){
-        for (auto i = -50; i < +50; i++) {
-          pixels[cp + 3*i + 1] = 0xFF;
-          pixels[cp + 3*i + 2] = 0xFF;
-        }
-        for (auto i = height/2 - 50; i < height/2 + 50; i++) {
-          pixels[i*(3*width) + 3*(3*width/6) + 1] = 0xFF;
-          pixels[i*(3*width) + 3*(3*width/6) + 2] = 0xFF;
+        for (auto k = -W; k <= W; k++){
+          for (auto i = -50; i < +50; i++) {
+            pixels[cp + 3*i + 1 + k*3*width] = 0xFF;
+            pixels[cp + 3*i + 2 + k*3*width] = 0xFF;
+          }
+          for (auto i = height/2 - 50; i < height/2 + 50; i++) {
+            pixels[i*(3*width) + 3*k + 3*(3*width/6) + 1] = 0xFF;
+            pixels[i*(3*width) + 3*k + 3*(3*width/6) + 2] = 0xFF;
+          }
         }
       }
-      fn(pixels,width,heigth);
+      fn(pixels,width,height);
     }
 
   private:
@@ -82,8 +87,8 @@ class World {
 
 };
 
-void updatePixels(unsigned char * pixels, int width, int heigth){
-  glTexSubImage2D(GL_TEXTURE_2D, 0 ,0, 0, width, heigth,
+void updatePixels(unsigned char * pixels, int width, int height){
+  glTexSubImage2D(GL_TEXTURE_2D, 0 ,0, 0, width, height,
                   GL_RGB, GL_UNSIGNED_BYTE, (GLvoid*)pixels);
 }
 
@@ -96,7 +101,7 @@ int main(){
     unsigned long frame = 0;
     do{
         w.update();
-        w.draw(updatePixels, width, height);
+        w.draw(updatePixels, 512, 512);
         draw(texture);
         // Swap buffers
         glfwSwapBuffers(window);
