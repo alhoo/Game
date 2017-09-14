@@ -2,11 +2,15 @@
 #include <vector>
 #include <unordered_map>
 #include <chrono>
+#include <cmath>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
 #include "video.h"
+
+#define SHOW_BORDERS 1
+#define SHOW_CENTER 1
 
 using namespace std;
 
@@ -29,11 +33,44 @@ class World {
 
     void draw(void (*fn)(unsigned char *, int, int),
               unsigned short width, unsigned short heigth){
-      auto k = (((int)(this->state[0]))%3000 + 1000);
+//      auto k = (((int)(this->state[0]))%3000 + 1000);
       for (auto i = 0; i < 3 * width * heigth; i++) {
         pixels[i] = 0x00;
-        if (i%4000 == k){
-          pixels[i] = 0xFF;
+      }
+      auto px = 400*sin(this->state[0]*0.1);
+      auto py = 400*cos(this->state[0]*0.1);
+      auto cp = 3*((int)(3*width * height/2 + 3*width/2)/3);
+      for (auto i = 0; i < 100; i++) {
+        int x = 3*((int)((20*sin(i*0.063) + px)/3));
+        int y = 3*((int)((20*cos(i*0.063) + py)/3));
+        pixels[cp + x*width + y] = 0xFF;
+        pixels[cp + x*width + y + 1] = 0xFF;
+        pixels[cp + x*width + y + 2] = 0xFF;
+      }
+      //Borders
+      if(SHOW_BORDERS){
+        for (auto i = 0; i < width; i++) {
+          pixels[3*i] = 0xFF;
+          pixels[3*i + 1] = 0xFF;
+          pixels[3*i + (3 * width)*(height - 1)] = 0xFF;
+          pixels[3*i + (3 * width)*(height - 1) + 1] = 0xFF;
+        }
+        for (auto i = 0; i < height; i++) {
+          pixels[i*(3*width)] = 0xFF;
+          pixels[i*(3*width)+2] = 0xFF;
+          pixels[i*(3*width) + 3*(width - 1)] = 0xFF;
+          pixels[i*(3*width) + 3*(width - 1)+2] = 0xFF;
+        }
+      }
+      //Center cross
+      if(SHOW_CENTER){
+        for (auto i = -50; i < +50; i++) {
+          pixels[cp + 3*i + 1] = 0xFF;
+          pixels[cp + 3*i + 2] = 0xFF;
+        }
+        for (auto i = height/2 - 50; i < height/2 + 50; i++) {
+          pixels[i*(3*width) + 3*(3*width/6) + 1] = 0xFF;
+          pixels[i*(3*width) + 3*(3*width/6) + 2] = 0xFF;
         }
       }
       fn(pixels,width,heigth);
