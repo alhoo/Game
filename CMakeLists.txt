@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 
 project(game)
-add_executable(game drawBox.cpp)
+add_executable(game drawBox.cpp video.cpp)
 find_package(OpenGL REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(GLEW REQUIRED)
