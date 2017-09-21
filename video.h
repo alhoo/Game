@@ -12,6 +12,6 @@ GLFWwindow* init(unsigned short, unsigned short);
 void drawBox();
 void draw(std::vector<GLuint>);
 
-std::vector<GLuint> loadTexture();
+std::vector<GLuint> loadTexture(int w, int h);
 
 #endif

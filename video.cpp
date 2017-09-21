@@ -12,7 +12,7 @@ void init_gl(unsigned short width, unsigned short height){
     */
 
     float aspect_ratio = ((float)height) / width;
-    gluPerspective(50.0f,(1.f/aspect_ratio),0.1f,10.0f);
+    gluPerspective(45.0f,(1.f/aspect_ratio),0.1f,10.0f);
     glMatrixMode(GL_MODELVIEW);
 
     glShadeModel(GL_SMOOTH);                        // Enables Smooth Shading
@@ -68,9 +68,10 @@ void draw(vector<GLuint> texture)
     glLoadIdentity();                           // Reset The Current Modelview Matrix
 
 
-    glTranslatef(0.0f,0.0f,-3.0f);                 // Move Left 1.5 Units And Into The Screen 6.0
+    glTranslatef(0.0f,0.0f,-2.5f);
     glRotatef(-70.0f, 1, 0, 0);
     glRotatef(0.1f * frame++, 0, 0, 1 );
+
     drawBox();
     glLoadIdentity();                           // Reset The Current Modelview Matrix
 }
