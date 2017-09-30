@@ -157,31 +157,61 @@ powermean(minerals.dot(me))
 dists = np.linalg.norm(minerals - me), axis=1)
 want = powermean(1/(1 + np.linalg.norm(minerals - (0,9), axis=1)))
 
+"""
+Now lets do it better with theano
+"""
 
+import numpy as np
 import theano
 import theano.tensor as T
 from theano import pp
-x = T.dvector('x')
-y = x**2
-gy = T.jacobian(y, x)
 
+# Define variables for making calculations
+x = T.dvector('human')
+m = T.dmatrix('minerals')
 
+# Define where the minerals and the human is
+minerals = np.array([[2,3], [7,5], [4, 4], [0, 9], [7,1]])
+me = np.array([1,3])
+
+# Define a average function that emphasizes the largest values
 Tpowmean = lambda x, k: T.mean(T.power(x, k))
 Tpowermean = lambda x, k: Tpowmean(x, k)/Tpowmean(x, k-1)
-Tpowerinvmean = lambda x, k: Tpowmean(x, k-1)/Tpowmean(x, k)
-f = theano.function([x], Tpowermean(x, 4))
-f((1,2,3))
 
-m = T.dmatrix('minerals')
-mineraldistance = Tpowermean(1/(1 + (m - x).norm(2, axis=1), 4)
-want = theano.function([x, m], mineraldistance)
-want(me, minerals)
-godirection = T.jacobian(mineraldistance, x)
-movefunc = theano.function([x,m], godirection)
-movefunc((1,3), minerals)
+# Define a function which indicates how close we are to a mineral
+mineralcloseness = Tpowermean(1/(1 + (m - x).norm(2, axis=1)), 4)
 
-pos = me
-for i in range(10):
-  pos = pos + movefunc(pos, minerals)/10
-  print(pos)
+# Go to the direction where the closeness to minerals increase
+godirection = T.jacobian(mineralcloseness, x)
+# Scale the go direction somewhat arbitrarily
+movefunc = theano.function([x,m], godirection / mineralcloseness)
 
+def findClosest(p0, minerals, speed=1, k=2):
+  """Finds the closest mineral starting from current position
+
+  Find the closest minerals using gradient descent styled movement.
+  This function is made just for testing purposes and a better function
+  should be used instead for real usage
+
+  Args:
+    p0 (vector): starting position vector
+    minerals (matrix): position of minerals
+    speed (float): how fast we should be moving
+    k (float): speed scaling factor
+
+  Returns:
+    vector where the search ended
+  """
+
+  pos = p0
+  for i in range(1000):
+    dpos = movefunc(pos, minerals)
+    dposnorm = np.linalg.norm(dpos)
+    if dposnorm > 1:
+      break
+    pos = pos + dpos*speed/np.power(dposnorm, k)
+    print(np.round(pos, 1))
+  return pos
+
+# Try out the searching function
+findClosest((0, 0), minerals, 0.065, 3)
