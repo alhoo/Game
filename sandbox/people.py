@@ -148,8 +148,15 @@ powermean((1,2,3))
 minerals = np.array([[2,3], [7,5], [4, 4], [0, 9], [7,1]])
 me = np.array([1,3])
 
+"""
+Not like this
+
 dist2 = lambda a, b: a.dot(b)
 powermean(minerals.dot(me))
+"""
+dists = np.linalg.norm(minerals - me), axis=1)
+want = powermean(1/(1 + np.linalg.norm(minerals - (0,9), axis=1)))
+
 
 import theano
 import theano.tensor as T
@@ -161,14 +168,20 @@ gy = T.jacobian(y, x)
 
 Tpowmean = lambda x, k: T.mean(T.power(x, k))
 Tpowermean = lambda x, k: Tpowmean(x, k)/Tpowmean(x, k-1)
+Tpowerinvmean = lambda x, k: Tpowmean(x, k-1)/Tpowmean(x, k)
 f = theano.function([x], Tpowermean(x, 4))
 f((1,2,3))
 
 m = T.dmatrix('minerals')
-mineraldistance = Tpowermean(m.dot(x), 4)
+mineraldistance = Tpowermean(1/(1 + (m - x).norm(2, axis=1), 4)
 want = theano.function([x, m], mineraldistance)
 want(me, minerals)
 godirection = T.jacobian(mineraldistance, x)
-theano.function([x,m], godirection)((1,3), minerals)
+movefunc = theano.function([x,m], godirection)
+movefunc((1,3), minerals)
 
+pos = me
+for i in range(10):
+  pos = pos + movefunc(pos, minerals)/10
+  print(pos)
 
