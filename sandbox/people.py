@@ -139,3 +139,36 @@ def muldot2(A, B):
  sit jos jollain on taas hyvä knowledge siinä paikassa missä se on niin toi kohina on melkein 0 ja se löytää suoraan mistä saa vettä tai ruokaa tai mistä löytyy vaarat.
 10:04
 """
+
+#powmean = lambda arr, k: reduce(lambda x, y: y + x, map(lambda x: pow(x, k), arr))/len(arr)
+powmean = lambda arr, k=4: np.average(np.power(np.array(arr), k))
+powermean = lambda arr, k=4: powmean(arr, k)/powmean(arr, k-1)
+powermean((1,2,3))
+
+minerals = np.array([[2,3], [7,5], [4, 4], [0, 9], [7,1]])
+me = np.array([1,3])
+
+dist2 = lambda a, b: a.dot(b)
+powermean(minerals.dot(me))
+
+import theano
+import theano.tensor as T
+from theano import pp
+x = T.dvector('x')
+y = x**2
+gy = T.jacobian(y, x)
+
+
+Tpowmean = lambda x, k: T.mean(T.power(x, k))
+Tpowermean = lambda x, k: Tpowmean(x, k)/Tpowmean(x, k-1)
+f = theano.function([x], Tpowermean(x, 4))
+f((1,2,3))
+
+m = T.dmatrix('minerals')
+mineraldistance = Tpowermean(m.dot(x), 4)
+want = theano.function([x, m], mineraldistance)
+want(me, minerals)
+godirection = T.jacobian(mineraldistance, x)
+theano.function([x,m], godirection)((1,3), minerals)
+
+
