@@ -154,7 +154,7 @@ Not like this
 dist2 = lambda a, b: a.dot(b)
 powermean(minerals.dot(me))
 """
-dists = np.linalg.norm(minerals - me), axis=1)
+dists = np.linalg.norm((minerals - me), axis=1)
 want = powermean(1/(1 + np.linalg.norm(minerals - (0,9), axis=1)))
 
 """
@@ -178,8 +178,13 @@ me = np.array([1,3])
 Tpowmean = lambda x, k: T.mean(T.power(x, k))
 Tpowermean = lambda x, k: Tpowmean(x, k)/Tpowmean(x, k-1)
 
-# Define a function which indicates how close we are to a mineral
-mineralcloseness = Tpowermean(1/(1 + (m - x).norm(2, axis=1)), 4)
+# Distances to all the minerals
+mineraldistances = (m - x).norm(2, axis=1)
+"""
+Define a function which indicates how close we are to a mineral as the 
+Nth power if the inverse of 1 plus distance
+"""
+mineralcloseness = Tpowermean(1/(1 + mineraldistances), 4)
 
 # Go to the direction where the closeness to minerals increase
 godirection = T.jacobian(mineralcloseness, x)
@@ -215,3 +220,21 @@ def findClosest(p0, minerals, speed=1, k=2):
 
 # Try out the searching function
 findClosest((0, 0), minerals, 0.065, 3)
+
+"""
+Tuohon pystyy nyt hyvin lisäämään kaikki kartan esteet ja viholliset ja eri tyyppiset mineraalit ja sit lisätä noi ukkelin tietämykset, pelot ja uteliaisuuden niin sen saa liikkumaan järkevästi tuolla
+19:17
+"""
+
+hardterrain = np.array([[2,3.5], [2.5,3], [2.5, 3.5], [0.5, 7], [7,3]])
+enemies = np.array([[5,4], [5,3], [7,3]])
+food = np.array([[1,1], [5,4], [3,6], [7,6]])
+
+"""
+Tohon on helppo varmaan rakentaa joku neuroverkko vielä päälle ku tolla theanolla on helppo rakennella niitäkin.
+19:19
+"""
+
+
+
+
