@@ -41,8 +41,20 @@ happy the closer we are to what themap offers for our needs. To find out were
 we should go, we calculate the gradient with regards to our current position
 and then we move that way.
 """
-insupply = 0
 powermean = lambda arr, k: (arr).pow(k).sum(0)/(arr).pow(k - 1).sum(0)
+
+def updateDemand(demand, supplydistances, verbose=False):
+  v, idxs = supplydistances.min(0)
+  v, jdx = v.min(0)
+  if v.lt(0.25).data.numpy()[0]:
+    idx = idxs[jdx]
+    if verbose:
+      print(jdx.data.numpy())
+    demand[jdx] -= 0.1
+  demand += 0.01
+  demand *= 0.999
+  return demand
+
 for i in range(10000):
   supplydistances = (supply - pos).pow(2).sum(2).t().sqrt()
   supplyattraction = demand*powermean(1/(1+supplydistances), 4)
@@ -50,12 +62,8 @@ for i in range(10000):
   happiness.backward(retain_graph=True)
   pos.data += pos.grad.data
   null = pos.grad.data.zero_()
-  v, idxs = supplydistances.min(0)
-  v, jdx = v.min(0)
-  if v.lt(0.25).data.numpy()[0]:
-    idx = idxs[jdx]
-    demand[idx] -= 0.1
-  demand += 0.01
+  demand = updateDemand(demand, supplydistances)
+  print(pos.data.numpy())
 
 """
 Next we should reduce the actors knowledge by hiding everything that are not
