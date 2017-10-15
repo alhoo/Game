@@ -60,7 +60,8 @@ for i in range(10000):
   supplyattraction = demand*powermean(1/(1+supplydistances), 4)
   happiness = supplyattraction.sum()
   happiness.backward(retain_graph=True)
-  pos.data += pos.grad.data
+  move = pos.grad.data/pos.grad.data.norm()/10 #Normalize move distance
+  pos.data += move
   null = pos.grad.data.zero_()
   demand = updateDemand(demand, supplydistances)
   print(pos.data.numpy())
