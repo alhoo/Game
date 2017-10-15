@@ -37,6 +37,10 @@ std::default_random_engine generator;
 int width = 1024, height=768;
 unsigned char * pixels = new unsigned char[256*256 * 3];
 
+/**
+ * Generate world people
+ * @param people - resulting matrix containing people
+ */
 void generatePeople(viennacl::matrix<ScalarType> &people){
   std::uniform_int_distribution<int> position(10, 256-10);
   auto tribex = position(generator);
@@ -55,6 +59,10 @@ void generatePeople(viennacl::matrix<ScalarType> &people){
       
       viennacl::copy(tmp, people);
 }
+/**
+ * Generate world minerals
+ * @param state - current world state
+ */
 void generateMinerals(unordered_map<int, int> &state){
   std::uniform_int_distribution<int> distribution(10, 256-10);
   for( auto i = 0; i < 50; i++){
@@ -73,6 +81,12 @@ void generateMinerals(unordered_map<int, int> &state){
     state[x*256 + y] = GOLD;
   }
 }
+
+/**
+ * Move people logically
+ * @param state - current world state
+ * @param people - current people states
+ */
 void updatePeople(unordered_map<int, int> &state, viennacl::matrix<ScalarType> &people){
   std::uniform_int_distribution<int> move(-1, 1);
   for( auto it = state.begin(); it != state.end(); ++it){
@@ -99,6 +113,7 @@ void updatePeople(unordered_map<int, int> &state, viennacl::matrix<ScalarType> &
   }
 }
 
+/** A class representing the whole world **/
 class World {
   public:
     void testVienna() {

@@ -191,6 +191,7 @@ godirection = T.jacobian(mineralcloseness, x)
 # Scale the go direction somewhat arbitrarily
 movefunc = theano.function([x,m], godirection / mineralcloseness)
 
+
 def findClosest(p0, minerals, speed=1, k=2):
   """Finds the closest mineral starting from current position
 
@@ -235,6 +236,96 @@ Tohon on helppo varmaan rakentaa joku neuroverkko vielä päälle ku tolla thean
 19:19
 """
 
+from random import random
+randomposition = lambda: (10*random(), 10*random())
+
+food = np.array([randomposition() for i in range(10)])
+water = np.array([randomposition() for i in range(10)])
+enemies = np.array([randomposition() for i in range(10)])
+shelter = np.array([randomposition() for i in range(10)])
+emptySpace = np.array([randomposition() for i in range(10)])
+materials = np.array([randomposition() for i in range(10)])
+people = np.array([randomposition() for i in range(10)])
+culture = np.array([randomposition() for i in range(10)])
+
+supply = np.array([food, water, enemies, shelter, materials, emptySpace, people, culture])
+
+hunger = 0.01
+thirst = 0.01
+peace = 0.51
+heat = 0.2
+activity = 0.01
+space = 0.01
+friends = 0.21
+knowledge = 0.3
+demand = np.array([hunger, thirst, peace, heat, activity, space, friends, knowledge])
+
+# Define a average function that emphasizes the largest values
+Tpowmean = lambda x, k: T.mean(T.power(x, k))
+Tpowermean = lambda x, k: Tpowmean(x, k)/Tpowmean(x, k-1)
+
+# Distances to all the minerals
+supplydistances = (m - x).norm(2, axis=1)
+"""
+Define a function which indicates how close we are to a mineral as the 
+Nth power if the inverse of 1 plus distance
+"""
+supplyattraction = d*Tpowermean(1/(1 + supplydistances), 4)
+
+# Go to the direction where the closeness to minerals increase
+godirection = T.jacobian(supplyattraction, x)
+# Scale the go direction somewhat arbitrarily
+movefunc = theano.function([x,m], godirection)
+
+#supply*demand.reshape(8,1,1)
+Tsupply = T.dmatrix('minerals')
 
 
+godirection = T.jacobian(Tsupply*demand.reshape(8,1,1), x)
 
+
+#Switching to torch
+import torch
+dtype = torch.FloatTensor
+"""
+food = 10*torch.randn(10, 2).type(dtype)
+water = 10*torch.randn(10, 2).type(dtype)
+enemies = 10*torch.randn(10, 2).type(dtype)
+shelter = 10*torch.randn(10, 2).type(dtype)
+emptySpace = 10*torch.randn(10, 2).type(dtype)
+materials = 10*torch.randn(10, 2).type(dtype)
+people = 10*torch.randn(10, 2).type(dtype)
+culture = 10*torch.randn(10, 2).type(dtype)
+
+supply = np.array([food, water, enemies, shelter, materials, emptySpace, people, culture])
+"""
+supply0 = 10*torch.randn(8, 3, 2).type(dtype)
+pos0 = torch.Tensor([0,0]).type(dtype)
+from torch.autograd import Variable
+pos = Variable(pos0, requires_grad=True)
+supply = Variable(supply0, requires_grad=False)
+
+
+hunger = 0.01
+thirst = 0.01
+peace = 0.51
+heat = 0.2
+activity = 0.01
+space = 0.01
+friends = 0.21
+knowledge = 0.3
+#demand = np.array([hunger, thirst, peace, heat, activity, space, friends, knowledge])
+demand0 = torch.Tensor([hunger, thirst, peace, heat, activity, space, friends, knowledge]).type(dtype)
+demand = Variable(demand0, requires_grad=False)
+
+
+powermean = lambda arr, k: (arr).pow(k).sum(0)/(arr).pow(k - 1).sum(0)
+for i in range(10):
+  supplydistances = (supply - pos).pow(2).sum(2).t().sqrt()
+  supplyattraction = demand*powermean(1/(1+supplydistances), 4)
+  happiness = supplyattraction.sum()
+  happiness.backward(retain_graph=True)
+  pos.data += pos.grad.data
+  null = pos.grad.data.zero_()
+  print(pos)
+  print(happiness)
