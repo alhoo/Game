@@ -54,22 +54,7 @@ for i in range(10000):
   v, jdx = v.min(0)
   if v.lt(0.25).data.numpy()[0]:
     idx = idxs[jdx]
-    if not insupply:
-      insupply = 10
-      print("We are close to a supply", jdx.data.numpy()[0])
-      print("Supply attraction", supplyattraction.data.numpy())
-      print("our position", pos.data.numpy())
-      print("supply position", supply[jdx][0][idx][0].data.numpy())
-      print("Distance", v.data.numpy()[0])
     demand[idx] -= 0.1
-#    break
-  else:
-    insupply = max(insupply - 1, 0)
-    print("-")
-  if i%100 == 0:
-#    print(pos)
-    print("Happiness", happiness.data.numpy()[0])
-    print("Demand", demand.data.numpy())
   demand += 0.01
 
 """
