@@ -1,51 +1,9 @@
-import pygame
-import numpy as np
-from math import sin, cos
-from pygame.locals import *
-from OpenGL.GL import *
-from OpenGL.GLU import *
-
-
-vertices = (
-    (1, -1, -1),
-    (1, 1, -1),
-    (-1, 1, -1),
-    (-1, -1, -1),
-    (1, -1, 1),
-    (1, 1, 1),
-    (-1, -1, 1),
-    (-1, 1, 1)
-    )
-
-edges = (
-    (0,1),
-    (0,3),
-    (0,4),
-    (2,1),
-    (2,3),
-    (2,7),
-    (6,3),
-    (6,4),
-    (6,7),
-    (5,1),
-    (5,4),
-    (5,7)
-    )
-
-
-def Cube():
-    glBegin(GL_LINES)
-    for edge in edges:
-        for vertex in edge:
-            glVertex3fv(vertices[vertex])
-    glEnd()
-
 import torch
 from torch.autograd import Variable
 #dtype = torch.cuda.FloatTensor
 #%s/numpy/cpu().numpy/g
-dtype = torch.FloatTensor
 #%s/cpu().numpy/numpy/g
+dtype = torch.FloatTensor
 
 """
 Here we calculate the distance to everything the map offers. Then we use an
@@ -125,6 +83,13 @@ generalize the above code to run on multiple actors. We should also reduce
 calculations by disregarding everything outside some bounding box.
 """
 
+import pygame
+from math import sin, cos
+from pygame.locals import *
+from OpenGL.GL import *
+from OpenGL.GLU import *
+import numpy as np
+
 def drawDots(data):
     """
     Draw dots that are arranged in the data input
@@ -155,8 +120,8 @@ def main():
   pygame.init()
   display = (800,600)
   pygame.display.set_mode(display, DOUBLEBUF|OPENGL)
-  gluPerspective(45, (display[0]/display[1]), 0.1, 50.0)
-  glTranslatef(0.0,0.0, -50)
+  gluPerspective(45, (display[0]/display[1]), 0.1, 100.0)
+  glTranslatef(0.0,0.0, -70)
   glPointSize(5.0)
 
   frame=0
