@@ -94,12 +94,6 @@ def drawDots(data):
     """
     Draw dots that are arranged in the data input
     """
-    vertices = np.array([
-      -1,-1,0,
-      1 ,-1,0,
-      -1,1 ,0,
-      1 ,1 ,0
-    ], dtype=np.float32)
     #The resources are in data[1]
     for i in range(len(data[1])):
       glColor((sin(i),i/10,1-i/10))
