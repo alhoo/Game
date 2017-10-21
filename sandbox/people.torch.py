@@ -72,7 +72,7 @@ def simulate():
     happiness.backward(retain_graph=True)
     move = pos.grad.data/pos.grad.data.norm()/10 #Normalize move distance
     pos.data += move
-    null = pos.grad.data.zero_()
+    pos.grad.data.zero_()
     demand = updateDemand(demand, supplydistances)
     yield (pos.data.numpy(), supply.data.numpy())
 
