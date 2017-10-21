@@ -126,24 +126,32 @@ calculations by disregarding everything outside some bounding box.
 """
 
 def drawDots(data):
+    """
+    Draw dots that are arranged in the data input
+    """
     vertices = np.array([
       -1,-1,0,
       1 ,-1,0,
       -1,1 ,0,
       1 ,1 ,0
     ], dtype=np.float32)
+    #The resources are in data[1]
     for i in range(len(data[1])):
       glColor((sin(i),i/10,1-i/10))
       glBegin(GL_POINTS)
       for p in data[1][i]:
         glVertex3f(p[0], p[1], 0);
       glEnd()
+    #The actor is in data[0]
     glColor((1,0,0))
     glBegin(GL_POINTS)
     glVertex3f(data[0][0], data[0][1], 0);
     glEnd()
 
 def main():
+  """
+  Run the simulation and display the data on the screen
+  """
   pygame.init()
   display = (800,600)
   pygame.display.set_mode(display, DOUBLEBUF|OPENGL)
