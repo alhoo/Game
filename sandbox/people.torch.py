@@ -1,35 +1,51 @@
+import pygame
+import numpy as np
+from math import sin, cos
+from pygame.locals import *
+from OpenGL.GL import *
+from OpenGL.GLU import *
+
+
+vertices = (
+    (1, -1, -1),
+    (1, 1, -1),
+    (-1, 1, -1),
+    (-1, -1, -1),
+    (1, -1, 1),
+    (1, 1, 1),
+    (-1, -1, 1),
+    (-1, 1, 1)
+    )
+
+edges = (
+    (0,1),
+    (0,3),
+    (0,4),
+    (2,1),
+    (2,3),
+    (2,7),
+    (6,3),
+    (6,4),
+    (6,7),
+    (5,1),
+    (5,4),
+    (5,7)
+    )
+
+
+def Cube():
+    glBegin(GL_LINES)
+    for edge in edges:
+        for vertex in edge:
+            glVertex3fv(vertices[vertex])
+    glEnd()
+
 import torch
-dtype = torch.FloatTensor
-"""
-food = 10*torch.randn(10, 2).type(dtype)
-water = 10*torch.randn(10, 2).type(dtype)
-enemies = 10*torch.randn(10, 2).type(dtype)
-shelter = 10*torch.randn(10, 2).type(dtype)
-emptySpace = 10*torch.randn(10, 2).type(dtype)
-materials = 10*torch.randn(10, 2).type(dtype)
-people = 10*torch.randn(10, 2).type(dtype)
-culture = 10*torch.randn(10, 2).type(dtype)
-
-supply = np.array([food, water, enemies, shelter, materials, emptySpace, people, culture])
-"""
-supply0 = 10*torch.randn(8, 3, 2).type(dtype)
-pos0 = torch.Tensor([0,0]).type(dtype)
 from torch.autograd import Variable
-pos = Variable(pos0, requires_grad=True)
-supply = Variable(supply0, requires_grad=False)
-
-
-hunger = 0.01
-thirst = 0.01
-peace = 0.51
-heat = 0.2
-activity = 0.01
-space = 0.01
-friends = 0.21
-knowledge = 0.3
-#demand = np.array([hunger, thirst, peace, heat, activity, space, friends, knowledge])
-demand0 = torch.Tensor([hunger, thirst, peace, heat, activity, space, friends, knowledge]).type(dtype)
-demand = Variable(demand0, requires_grad=False)
+#dtype = torch.cuda.FloatTensor
+#%s/numpy/cpu().numpy/g
+dtype = torch.FloatTensor
+#%s/cpu().numpy/numpy/g
 
 """
 Here we calculate the distance to everything the map offers. Then we use an
@@ -44,6 +60,12 @@ and then we move that way.
 powermean = lambda arr, k: (arr).pow(k).sum(0)/(arr).pow(k - 1).sum(0)
 
 def updateDemand(demand, supplydistances, verbose=False):
+  """
+  To make the actor more complete, we should look into making the actor
+  satisfy its needs when it is close enought to the supplies. So when the actor
+  is close to water and it is thirsty, after spending a moment there the
+  thirsty-value starts to go to 0.
+  """
   v, idxs = supplydistances.min(0)
   v, jdx = v.min(0)
   if v.lt(0.25).data.numpy()[0]:
@@ -55,25 +77,99 @@ def updateDemand(demand, supplydistances, verbose=False):
   demand *= 0.999
   return demand
 
-for i in range(10000):
-  supplydistances = (supply - pos).pow(2).sum(2).t().sqrt()
-  supplyattraction = demand*powermean(1/(1+supplydistances), 4)
-  happiness = supplyattraction.sum()
-  happiness.backward(retain_graph=True)
-  move = pos.grad.data/pos.grad.data.norm()/10 #Normalize move distance
-  pos.data += move
-  null = pos.grad.data.zero_()
-  demand = updateDemand(demand, supplydistances)
-  print(pos.data.numpy())
+def simulate():
+  """
+  food = 10*torch.randn(10, 2).type(dtype)
+  water = 10*torch.randn(10, 2).type(dtype)
+  enemies = 10*torch.randn(10, 2).type(dtype)
+  shelter = 10*torch.randn(10, 2).type(dtype)
+  emptySpace = 10*torch.randn(10, 2).type(dtype)
+  materials = 10*torch.randn(10, 2).type(dtype)
+  people = 10*torch.randn(10, 2).type(dtype)
+  culture = 10*torch.randn(10, 2).type(dtype)
+
+  supply = np.array([food, water, enemies, shelter, materials, emptySpace, people, culture])
+  """
+  supply0 = 10*torch.randn(8, 3, 2).type(dtype)
+  pos0 = torch.Tensor([0,0]).type(dtype)
+  pos = Variable(pos0, requires_grad=True)
+  supply = Variable(supply0, requires_grad=False)
+
+
+  hunger = 0.01
+  thirst = 0.01
+  peace = 0.51
+  heat = 0.2
+  activity = 0.01
+  space = 0.01
+  friends = 0.21
+  knowledge = 0.3
+#demand = np.array([hunger, thirst, peace, heat, activity, space, friends, knowledge])
+  demand0 = torch.Tensor([hunger, thirst, peace, heat, activity, space, friends, knowledge]).type(dtype)
+  demand = Variable(demand0, requires_grad=False)
+  while True:
+    supplydistances = (supply - pos).pow(2).sum(2).t().sqrt()
+    supplyattraction = demand*powermean(1/(1+supplydistances), 4)
+    happiness = supplyattraction.sum()
+    happiness.backward(retain_graph=True)
+    move = pos.grad.data/pos.grad.data.norm()/10 #Normalize move distance
+    pos.data += move
+    null = pos.grad.data.zero_()
+    demand = updateDemand(demand, supplydistances)
+    yield (pos.data.numpy(), supply.data.numpy())
 
 """
 Next we should reduce the actors knowledge by hiding everything that are not
 in straight line of sight and what the actor doesn't remember. Then we should
 generalize the above code to run on multiple actors. We should also reduce
 calculations by disregarding everything outside some bounding box.
-
-To make the actor more complete, we should look into making the actor satisfie
-its needs when it is close enought to the supplies. So when the actor is close
-to water and it is thirsty, after spending a moment there the thirsty-value
-starts to go to 0.
 """
+
+def drawDots(data):
+    vertices = np.array([
+      -1,-1,0,
+      1 ,-1,0,
+      -1,1 ,0,
+      1 ,1 ,0
+    ], dtype=np.float32)
+    for i in range(len(data[1])):
+      glColor((sin(i),i/10,1-i/10))
+      glBegin(GL_POINTS)
+      for p in data[1][i]:
+        glVertex3f(p[0], p[1], 0);
+      glEnd()
+    glColor((1,0,0))
+    glBegin(GL_POINTS)
+    glVertex3f(data[0][0], data[0][1], 0);
+    glEnd()
+
+def main():
+  pygame.init()
+  display = (800,600)
+  pygame.display.set_mode(display, DOUBLEBUF|OPENGL)
+  gluPerspective(45, (display[0]/display[1]), 0.1, 50.0)
+  glTranslatef(0.0,0.0, -50)
+  glPointSize(5.0)
+
+  frame=0
+  for data in simulate():
+    for event in pygame.event.get():
+      if event.type == pygame.QUIT:
+        pygame.quit()
+        quit()
+      if event.type == KEYUP and event.key == K_ESCAPE:
+        return                
+    
+    #glRotatef(1, 3, 1, 1)
+    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
+    glMatrixMode(GL_MODELVIEW)
+
+    frame = frame + 1
+    drawDots(data)
+
+    pygame.display.flip()
+    pygame.time.wait(10)
+
+
+if __name__ == '__main__':
+  main()
