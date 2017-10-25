@@ -65,9 +65,8 @@ def simulateN(N=10000):
 
 """
 Next we should reduce the actors knowledge by hiding everything that are not
-in straight line of sight and what the actor doesn't remember. Then we should
-generalize the above code to run on multiple actors. We should also reduce
-calculations by disregarding everything outside some bounding box.
+in straight line of sight and what the actor doesn't remember. We should also
+reduce calculations by disregarding everything outside some bounding box.
 """
 
 import pygame
