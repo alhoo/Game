@@ -1,10 +1,10 @@
 import torch
 from torch.autograd import Variable
 import numpy as np
-#dtype = torch.cuda.FloatTensor
-#%s/numpy/cpu().numpy/g
-#%s/cpu().numpy/numpy/g
-dtype = torch.FloatTensor
+dtype = torch.cuda.FloatTensor
+#%s/numpy/cpu().cpu().numpy/g
+#%s/cpu().cpu().numpy/numpy/g
+#dtype = torch.FloatTensor
 
 """
 Here we calculate the distance to everything the map offers. Then we find which
@@ -30,37 +30,33 @@ def updateDemandN(demand, supplydistances, verbose=False):
 def simulateN(N=10000):
   """
   supply = np.array([food, water, enemies, shelter, materials, emptySpace, people, culture])
+  demand = np.array([hunger, thirst, peace, heat, activity, space, friends, knowledge])
   """
   supply0dim = (8,5,2)
+  shape1 = int(np.multiply(*supply0dim[:-1]))
+
   supply0 = 10*torch.randn(*supply0dim).type(dtype)
-  pos0 = 10*torch.randn(N, 2).type(dtype)
-  pos = Variable(pos0, requires_grad=True)
-  supply = Variable(supply0, requires_grad=False)
-
-
-#demand = np.array([hunger, thirst, peace, heat, activity, space, friends, knowledge])
   demand0 = torch.randn(N, 8).type(dtype)
+  pos0 = 10*torch.randn(N, 2).type(dtype)
+
+  supply = Variable(supply0, requires_grad=False)
   demand = Variable(demand0, requires_grad=False)
-  shape1 = np.multiply(*supply0dim[:-1])
+  pos = Variable(pos0, requires_grad=True)
 
   while True:
     supplydistances = (supply.repeat(N,1,1,1).view(N,-1,2) - \
-                       pos.repeat(1,int(shape1)).view(N,-1,2))\
+                       pos.repeat(1,shape1).view(N,-1,2))\
                        .pow(2).sum(2).sqrt().view(N,-1)
     supplyattraction = demand.view(N,supply0dim[0],1)\
                              .expand(N,supply0dim[0],supply0dim[1])\
                              *torch.exp(-supplydistances.view(N,supply0dim[0],supply0dim[1]))
-    #print(supplydistances[0].view(*supply0dim[:-1]))
-    #print(supplyattraction[0].view(*supply0dim[:-1]))
     happiness = supplyattraction.sum()
     happiness.backward(retain_graph=True)
-    mover = pos.grad.data;
-    move = (mover.t() / pos.grad.data.pow(2).sum(1).sqrt()/10).t() #Normalize move distance
+    move = (pos.grad.data.t() / pos.grad.data.pow(2).sum(1).sqrt()/10).t() #Normalize move distance
     pos.data += move
     pos.grad.data.zero_()
     demand = updateDemandN(demand, supplydistances.view(N, -1, supply0dim[1]))
-    #print(demand[0])
-    yield (pos.data.numpy(), supply.data.numpy())
+    yield (pos.data.cpu().numpy(), supply.data.cpu().numpy())
 
 
 """
