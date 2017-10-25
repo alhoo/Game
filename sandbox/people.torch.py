@@ -81,18 +81,26 @@ def drawDots(data):
     """
     Draw dots that are arranged in the data input
     """
-    #The actors is in data[0]
+    # The actors is in data[0]
+    glColor((1,0,0))
     for i in range(len(data[0])):
-      glColor((1,0,0))
+      if i == len(data[0]) - 10:
+        break
       glBegin(GL_POINTS)
       glVertex3f(data[0][i][0], data[0][i][1], 0);
       glEnd()
-    #The resources are in data[1]
+    # The resources are in data[1]
     for i in range(len(data[1])):
       glColor((sin(i),i/10,1-i/10))
       glBegin(GL_POINTS)
       for p in data[1][i]:
         glVertex3f(p[0], p[1], 0);
+      glEnd()
+    # Draw 10 people white and above the resources
+    glColor((1,1,1))
+    for i in range(len(data[0]) - 10, len(data[0])):
+      glBegin(GL_POINTS)
+      glVertex3f(data[0][i][0], data[0][i][1], 0);
       glEnd()
 
 def main():
