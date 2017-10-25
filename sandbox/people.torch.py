@@ -51,7 +51,8 @@ def simulateN(N=10000):
                        .pow(2).sum(2).sqrt()
     supplyattraction = demand.view(N,supply0dim[0],1)\
                              .expand(N,supply0dim[0],supply0dim[1])\
-                             *torch.exp(-supplydistances.view(N,supply0dim[0],supply0dim[1]))
+                             *(1/supplydistances.view(N,supply0dim[0],supply0dim[1]).pow(0.75))
+                             #*torch.exp(-supplydistances.view(N,supply0dim[0],supply0dim[1]))
     happiness = supplyattraction.sum()
     happiness.backward(retain_graph=False)
     move = (pos.grad.data.t() / pos.grad.data.pow(2).sum(1).sqrt()/10).t() #Normalize move distance
