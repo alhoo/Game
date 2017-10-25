@@ -5,6 +5,7 @@ dtype = torch.cuda.FloatTensor
 #%s/numpy/cpu().cpu().numpy/g
 #%s/cpu().cpu().numpy/numpy/g
 #dtype = torch.FloatTensor
+import torch.cuda as cutorch
 
 """
 Here we calculate the distance to everything the map offers. Then we find which
@@ -42,20 +43,24 @@ def simulateN(N=10000):
   supply = Variable(supply0, requires_grad=False)
   demand = Variable(demand0, requires_grad=False)
   pos = Variable(pos0, requires_grad=True)
-
+  
+  n=0
   while True:
     supplydistances = (supply.repeat(N,1,1,1).view(N,-1,2) - \
                        pos.repeat(1,shape1).view(N,-1,2))\
-                       .pow(2).sum(2).sqrt().view(N,-1)
+                       .pow(2).sum(2).sqrt()
     supplyattraction = demand.view(N,supply0dim[0],1)\
                              .expand(N,supply0dim[0],supply0dim[1])\
                              *torch.exp(-supplydistances.view(N,supply0dim[0],supply0dim[1]))
     happiness = supplyattraction.sum()
-    happiness.backward(retain_graph=True)
+    happiness.backward(retain_graph=False)
     move = (pos.grad.data.t() / pos.grad.data.pow(2).sum(1).sqrt()/10).t() #Normalize move distance
     pos.data += move
     pos.grad.data.zero_()
     demand = updateDemandN(demand, supplydistances.view(N, -1, supply0dim[1]))
+#    print(cutorch.getMemoryUsage(0))
+#    del supplydistances
+#    del supplyattraction
     yield (pos.data.cpu().numpy(), supply.data.cpu().numpy())
 
 
@@ -67,23 +72,29 @@ reduce calculations by disregarding everything outside some bounding box.
 
 import pygame
 from math import sin, cos
+
 from pygame.locals import *
+
 from OpenGL.GL import *
 from OpenGL.GLU import *
+
+from ctypes import *
 import numpy as np
 
-def drawDots(data):
+def drawDots(data, vbo):
     """
     Draw dots that are arranged in the data input
     """
     # The actors is in data[0]
+    vertices = (data[0].reshape(-1))
+    glBufferData (GL_ARRAY_BUFFER,
+                  4*len(vertices),
+                  (c_float*len(vertices))(*vertices),
+                  GL_STREAM_DRAW)
+    
+    glVertexPointer (2, GL_FLOAT, 0, None)
     glColor((1,0,0))
-    for i in range(len(data[0])):
-      if i == len(data[0]) - 10:
-        break
-      glBegin(GL_POINTS)
-      glVertex3f(data[0][i][0], data[0][i][1], 0);
-      glEnd()
+    glDrawArrays (GL_POINTS, 0, len(data[0]))
     # The resources are in data[1]
     for i in range(len(data[1])):
       glColor((sin(i),i/10,1-i/10))
@@ -109,9 +120,15 @@ def main():
   gluPerspective(45, (display[0]/display[1]), 0.1, 100.0)
   glTranslatef(0.0,0.0, -70)
   glPointSize(5.0)
+  glEnableClientState (GL_VERTEX_ARRAY)
+
+  vbo = glGenBuffers (1)
+  glBindBuffer (GL_ARRAY_BUFFER, vbo)
   N=100
   if len(sys.argv)>1:
     N=int(sys.argv[1])
+  
+  glBindBuffer (GL_ARRAY_BUFFER, vbo)
 
   t0 = pygame.time.get_ticks()
   t4p = t0
@@ -120,11 +137,10 @@ def main():
   for data in simulateN(N):
     t1 = pygame.time.get_ticks()
     for event in pygame.event.get():
-      if event.type == pygame.QUIT:
+      if (event.type == KEYUP and event.key == K_ESCAPE) or \
+          event.type == pygame.QUIT:
         pygame.quit()
         quit()
-      if event.type == KEYUP and event.key == K_ESCAPE:
-        return                
     
     #glRotatef(1, 3, 1, 1)
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
@@ -132,13 +148,16 @@ def main():
 
     frame = frame + 1
     t2 = pygame.time.get_ticks()
-    drawDots(data)
+    drawDots(data, vbo)
     t3 = pygame.time.get_ticks()
 
     pygame.display.flip()
-    pygame.time.wait(10)
+    pygame.time.wait(1)
     t4 = pygame.time.get_ticks()
-    #print({"simulation": t1 - t4p, "inputs": t2 - t1, "draw": t3 - t2, "flip screen": t4 - t3})
+    print({"simulation": t1 - t4p,
+           "inputs": t2 - t1,
+           "draw": t3 - t2,
+           "flip screen": t4 - t3})
     t4p = t4
 
 
