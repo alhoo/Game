@@ -86,16 +86,18 @@ def drawDots(data, vbo):
     Draw dots that are arranged in the data input
     """
     # The actors is in data[0]
+    glPointSize(1.0)
     vertices = (data[0].reshape(-1))
     glBufferData (GL_ARRAY_BUFFER,
                   4*len(vertices),
                   (c_float*len(vertices))(*vertices),
-                  GL_STREAM_DRAW)
+                  GL_STATIC_DRAW)
     
     glVertexPointer (2, GL_FLOAT, 0, None)
     glColor((1,0,0))
     glDrawArrays (GL_POINTS, 0, len(data[0]))
     # The resources are in data[1]
+    glPointSize(5.0)
     for i in range(len(data[1])):
       glColor((sin(i),i/10,1-i/10))
       glBegin(GL_POINTS)
@@ -103,6 +105,7 @@ def drawDots(data, vbo):
         glVertex3f(p[0], p[1], 0);
       glEnd()
     # Draw 10 people white and above the resources
+    glPointSize(3.0)
     glColor((1,1,1))
     for i in range(len(data[0]) - 10, len(data[0])):
       glBegin(GL_POINTS)
@@ -119,7 +122,7 @@ def main():
   pygame.display.set_mode(display, DOUBLEBUF|OPENGL)
   gluPerspective(45, (display[0]/display[1]), 0.1, 100.0)
   glTranslatef(0.0,0.0, -70)
-  glPointSize(5.0)
+  glPointSize(1.0)
   glEnableClientState (GL_VERTEX_ARRAY)
 
   vbo = glGenBuffers (1)
@@ -154,10 +157,11 @@ def main():
     pygame.display.flip()
     pygame.time.wait(1)
     t4 = pygame.time.get_ticks()
-    print({"simulation": t1 - t4p,
-           "inputs": t2 - t1,
-           "draw": t3 - t2,
-           "flip screen": t4 - t3})
+    if frame % 100 == 0:
+      print({"simulation": t1 - t4p,
+             "inputs": t2 - t1,
+             "draw": t3 - t2,
+             "flip screen": t4 - t3})
     t4p = t4
 
 
