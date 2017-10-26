@@ -24,9 +24,7 @@ def updateDemandN(demand, supplydistances, verbose=False):
   is close to water and it is thirsty, after spending a moment there the
   thirsty-value starts to go to 0.
   """
-  demand -= (0.1*supplydistances.lt(0.25).sum(2).type(dtype) - 0.01)
-  demand *= 0.999
-  return demand
+  return 0.999*(demand - (0.1*supplydistances.lt(0.25).sum(2).type(dtype) - 0.01))
 
 def simulateN(N=10000):
   """
