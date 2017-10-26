@@ -49,20 +49,18 @@ def simulateN(N=10000):
     supplydistances = (supply.repeat(N,1,1,1).view(N,-1,2) - \
                        pos.repeat(1,shape1).view(N,-1,2))\
                        .pow(2).sum(2).sqrt()
-    supplyattraction = demand.view(N,supply0dim[0],1)\
+    supplyattraction = demand.detach().view(N,supply0dim[0],1)\
                              .expand(N,supply0dim[0],supply0dim[1])\
                              *(1/supplydistances.view(N,supply0dim[0],supply0dim[1]).pow(0.75))
                              #*torch.exp(-supplydistances.view(N,supply0dim[0],supply0dim[1]))
     happiness = supplyattraction.sum()
-    happiness.backward(retain_graph=False)
+    happiness.backward()
     move = (pos.grad.data.t() / pos.grad.data.pow(2).sum(1).sqrt()/10).t() #Normalize move distance
     pos.data += move
     pos.grad.data.zero_()
     demand = updateDemandN(demand, supplydistances.view(N, -1, supply0dim[1]))
-#    print(cutorch.getMemoryUsage(0))
-#    del supplydistances
-#    del supplyattraction
     yield (pos.data.cpu().numpy(), supply.data.cpu().numpy())
+    n = n + 1
 
 
 """
@@ -108,7 +106,7 @@ def drawDots(data, vbo):
     # Draw 10 people white and above the resources
     glPointSize(3.0)
     glColor((1,1,1))
-    for i in range(len(data[0]) - 10, len(data[0])):
+    for i in range(min(len(data[0]), max(4,len(data[0]) - 10)), len(data[0])):
       glBegin(GL_POINTS)
       glVertex3f(data[0][i][0], data[0][i][1], 0);
       glEnd()
