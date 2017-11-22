@@ -47,9 +47,10 @@ def simulateN(N=10000):
     supplydistances = (supply.repeat(N,1,1,1).view(N,-1,2) - \
                        pos.repeat(1,shape1).view(N,-1,2))\
                        .pow(2).sum(2).sqrt()
+    # demand is detached to fix a bug with growing computation costs
     supplyattraction = demand.detach().view(N,supply0dim[0],1)\
                              .expand(N,supply0dim[0],supply0dim[1])\
-                             *(1/supplydistances.view(N,supply0dim[0],supply0dim[1]).pow(0.75))
+                             *(1/supplydistances.view(N,supply0dim[0],supply0dim[1]).pow(1.5))
                              #*torch.exp(-supplydistances.view(N,supply0dim[0],supply0dim[1]))
     happiness = supplyattraction.sum()
     happiness.backward()
@@ -67,6 +68,7 @@ in straight line of sight and what the actor doesn't remember. We should also
 reduce calculations by disregarding everything outside some bounding box.
 """
 
+import time
 import pygame
 from math import sin, cos
 
@@ -130,12 +132,12 @@ def main():
   
   glBindBuffer (GL_ARRAY_BUFFER, vbo)
 
-  t0 = pygame.time.get_ticks()
+  t0 = 1000*time.time()
   t4p = t0
 
   frame=0
   for data in simulateN(N):
-    t1 = pygame.time.get_ticks()
+    t1 = 1000*time.time()
     for event in pygame.event.get():
       if (event.type == KEYUP and event.key == K_ESCAPE) or \
           event.type == pygame.QUIT:
@@ -147,18 +149,20 @@ def main():
     glMatrixMode(GL_MODELVIEW)
 
     frame = frame + 1
-    t2 = pygame.time.get_ticks()
+    t2 = 1000*time.time()
     drawDots(data, vbo)
-    t3 = pygame.time.get_ticks()
+    t3 = 1000*time.time()
 
     pygame.display.flip()
-    pygame.time.wait(1)
-    t4 = pygame.time.get_ticks()
-    if frame % 100 == 0:
-      print({"simulation": t1 - t4p,
-             "inputs": t2 - t1,
-             "draw": t3 - t2,
-             "flip screen": t4 - t3})
+    t4 = 1000*time.time()
+    if frame % 30 == 0:
+      sys.stdout.write(
+             "simulation: %.1fms inputs: %.1fms draw: %.1fms flipscreen: %.1fms fps: %.1f\r" % (
+             (t1 - t4p),
+             (t2 - t1),
+             (t3 - t2),
+             (t4 - t3),
+             1000/(t4 - t4p)))
     t4p = t4
 
 
