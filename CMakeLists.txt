@@ -39,7 +39,7 @@ add_dependencies( ViennaCL ViennaCL_ext )
 include_directories(${CMAKE_CURRENT_LIST_DIR}/external/src/ViennaCL_ext/)
 #include_directories(${CMAKE_CURRENT_LIST_DIR}/external/src/ViennaCL_ext/)
 
-add_executable(game game.cpp video.cpp)
+add_executable(game game.cpp video.cpp simulation.cpp)
 add_dependencies( game ViennaCL )
 find_package(OpenGL REQUIRED)
 find_package(glfw3 REQUIRED)
