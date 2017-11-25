@@ -1,0 +1,12 @@
+diff --git a/cmake/FindOpenCL.cmake b/cmake/FindOpenCL.cmake
+index c358d8a..f6288b0 100644
+--- a/cmake/FindOpenCL.cmake
++++ b/cmake/FindOpenCL.cmake
+@@ -63,6 +63,7 @@ else(ENV_OPENCLROOT)
+   find_library(
+     OPENCL_LIBRARY
+     NAMES OpenCL
++    PATHS ENV LD_LIBRARY_PATH
+     )
+ endif(ENV_OPENCLROOT)
+ 
