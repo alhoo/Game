@@ -1,0 +1,4 @@
+pyopengl
+pygame
+torch
+torchvision
